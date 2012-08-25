@@ -1,0 +1,307 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+</head>
+
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+
+<style>
+#gameContainer{
+	background-image: url(images/bkgd.jpg);
+	margin: 0 auto;
+}
+</style>
+
+<body>
+	<canvas id="gameContainer" style="border: 1px solid black"></canvas>
+</body>
+
+<script type="text/javascript">
+var canvas = document.getElementById("gameContainer");
+var context = canvas.getContext("2d");
+
+var SnakeBodySegment = function(x,y){
+	this.x = x;
+	this.y = y;
+	this.width = 20;
+	this.height = 20;
+};
+
+var Snake = function(){
+	this.x = 0;
+	this.y = 0;
+	this.width = 20;
+	this.height = 20;
+	this.direction = "right";
+	this.snakeBodySegments = new Array();
+	
+	this.addSegment = function(){
+		snakeBodySegments[snakeBodySegments.length]  = new SnakeBodySegment(this.x,this.y);
+	};
+	
+	this.update = function(direction){
+		//Add segment before moving head
+		if(snake.snakeBodySegments.length>0){
+			for(i=snake.snakeBodySegments.length-1; i > 0; i--){
+				snake.snakeBodySegments[i].y = snake.snakeBodySegments[i-1].y;
+				snake.snakeBodySegments[i].x = snake.snakeBodySegments[i-1].x;
+			}
+			snake.snakeBodySegments[0].y = snake.y;
+			snake.snakeBodySegments[0].x = snake.x;
+		} 
+		
+		switch(direction){
+			case "right":
+				this.x+=this.width;
+			break;
+			case "left":
+				this.x-=this.width;
+			break;
+			case "up":
+				this.y-=this.width;
+			break;
+			case "down":
+				this.y+=this.width;
+			break;
+		}
+	}
+	
+	this.output = function(x,y,direction){
+		var headImage = new Image();
+		headImage.src = "images/head1.png";
+		headImage.onload = function() {
+			switch(direction){
+				case "right":
+				context.drawImage(headImage, 20, 0, 20, 20, x, y, 20, 20);
+				break;
+				case "left":
+				context.drawImage(headImage, 0, 0, 20, 20, x, y, 20, 20);
+				break;
+				case "up":
+				context.drawImage(headImage, 0, 20, 20, 20, x, y, 20, 20);
+				break;
+				case "down":
+				context.drawImage(headImage, 20, 20, 20, 20, x, y, 20, 20);
+				break;
+			}
+	   		
+	    };
+	    
+	    var bodyImage = new Image();
+		bodyImage.src = "images/body1.png";
+		bodyImage.onload = function() {
+			for(i=0; i<snake.snakeBodySegments.length; i++){
+				if(snake.snakeBodySegments.length == 1){
+					switch(direction){
+					case "right":
+						context.drawImage(bodyImage, 0, 20, 20, 20, x-20, y, 20, 20);
+					break;
+					case "left":
+						context.drawImage(bodyImage, 20, 20, 20, 20, x+20, y, 20, 20);
+					break;
+					case "up":
+						context.drawImage(bodyImage, 40, 0, 20, 20, x, y+20, 20, 20);
+					break;
+					case "down":
+						context.drawImage(bodyImage, 40, 20, 20, 20, x, y-20, 20, 20);
+					break;
+					}
+				}				
+				if(i==snake.snakeBodySegments.length-1){ //last body segment is tail
+					if(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x == snake.snakeBodySegments[snake.snakeBodySegments.length-2].x){
+						if(snake.snakeBodySegments[snake.snakeBodySegments.length-1].y < snake.snakeBodySegments[snake.snakeBodySegments.length-2].y){
+							context.drawImage(bodyImage, 40, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+						} else if(snake.snakeBodySegments[snake.snakeBodySegments.length-1].y > snake.snakeBodySegments[snake.snakeBodySegments.length-2].y){
+							context.drawImage(bodyImage, 40, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+						} 
+					} else if(snake.snakeBodySegments[snake.snakeBodySegments.length-1].y == snake.snakeBodySegments[snake.snakeBodySegments.length-2].y){
+						if(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x < snake.snakeBodySegments[snake.snakeBodySegments.length-2].x){
+							context.drawImage(bodyImage, 0, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+						} else if(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x > snake.snakeBodySegments[snake.snakeBodySegments.length-2].x){
+							context.drawImage(bodyImage, 20, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+						}	
+					}
+				} else { //rest of body
+					if(snake.snakeBodySegments.length == 2){						
+						if(snake.snakeBodySegments[i].x == snake.snakeBodySegments[i+1].x){
+							if(snake.snakeBodySegments[0].x != snake.x){
+								if(snake.snakeBodySegments[i-1].x > snake.snakeBodySegments[i].x){
+									context.drawImage(bodyImage, 60, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);	
+								} else if (snake.snakeBodySegments[i-1].x < snake.snakeBodySegments[i].x){
+									context.drawImage(bodyImage, 80, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+								} 
+							} else {
+								context.drawImage(bodyImage, 20, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+							}
+						} else if(snake.snakeBodySegments[0].y == snake.y) {
+							if(snake.snakeBodySegments[0].y != snake.y){
+								if(snake.snakeBodySegments[0].y > snake.y){
+									context.drawImage(bodyImage, 60, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);	
+								} else if (snake.snakeBodySegments[0].y < snake.y){
+									context.drawImage(bodyImage, 60, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+								} 
+							} else {
+								context.drawImage(bodyImage, 0, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+							}
+						}
+					} else if(snake.snakeBodySegments.length > 2 && i>0){						
+						if(snake.snakeBodySegments[i].x == snake.snakeBodySegments[i+1].x){
+							if(snake.snakeBodySegments[i-1].x != snake.snakeBodySegments[i].x){
+								if(snake.snakeBodySegments[i-1].x > snake.snakeBodySegments[i].x){
+									context.drawImage(bodyImage, 60, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);	
+								} else if (snake.snakeBodySegments[i-1].x < snake.snakeBodySegments[i].x){
+									context.drawImage(bodyImage, 80, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+								} 
+							} else {
+								context.drawImage(bodyImage, 20, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+							}
+						} else if(snake.snakeBodySegments[i].y == snake.snakeBodySegments[i+1].y) {
+							if(snake.snakeBodySegments[i-1].y != snake.snakeBodySegments[i].y){
+								if(snake.snakeBodySegments[i-1].y > snake.snakeBodySegments[i].y){
+									context.drawImage(bodyImage, 60, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);	
+								} else if (snake.snakeBodySegments[i-1].y < snake.snakeBodySegments[i].y){
+									context.drawImage(bodyImage, 60, 20, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+								} 
+							} else {
+								context.drawImage(bodyImage, 0, 0, 20, 20, snake.snakeBodySegments[i].x, snake.snakeBodySegments[i].y, 20, 20);
+							}
+						}
+					}					
+				}
+			}
+	    };
+	}
+
+}
+
+var GameObject = function(x, y, width, height){
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	
+	this.isColliding = function(a, b){
+		if(typeof(a) == object && typeof(b) == object){
+			
+			return false;
+		}
+		return false;
+	}
+}
+
+
+var Game = function(x, y, width, height){
+
+	$("#gameContainer").attr("width", width).attr("height", height);
+	
+	this.fps = 12;
+	this.x = x;
+	this.y = y;
+	this.height = height;
+	this.width = width;
+	this.gameObjects = new Array();
+	
+	this.input = function(){
+		var e = jQuery.Event("keydown");
+		$(document).keydown(function (e) {
+    		switch(e.which){
+    			//1st player controls
+				case 37://left
+				snake.direction = "left"
+				break;
+				case 38://up
+				snake.direction = "up"
+				break;
+				case 39://rigt
+				snake.direction = "right"
+				break;
+				case 40://down
+				snake.direction = "down"
+				break;
+				case 16:
+				/*
+				switch(direction){
+					case "right":
+					snake.snakeBodySegments[snake.snakeBodySegments.length] = new SnakeBodySegment(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x-20, snake.snakeBodySegments[snake.snakeBodySegments.length-1].y);
+					break;
+					case "left":
+					snake.snakeBodySegments[snake.snakeBodySegments.length] = new SnakeBodySegment(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x+20, snake.snakeBodySegments[snake.snakeBodySegments.length-1].y);
+					break;
+					case "up":
+					snake.snakeBodySegments[snake.snakeBodySegments.length] = new SnakeBodySegment(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x, snake.snakeBodySegments[snake.snakeBodySegments.length-1].y+20);
+					break;
+					case "down":
+					snake.snakeBodySegments[snake.snakeBodySegments.length] = new SnakeBodySegment(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x, snake.snakeBodySegments[snake.snakeBodySegments.length-1].y-20);
+					break;
+				}
+				*/
+				snake.snakeBodySegments[snake.snakeBodySegments.length] = new SnakeBodySegment(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x,snake.snakeBodySegments[snake.snakeBodySegments.length-1].y);
+				$("body").append(snake.snakeBodySegments[snake.snakeBodySegments.length-1].x);
+				break;
+				
+				//2nd player controls
+				case 65://left
+				
+				break;
+				case 87://up 
+				
+				break;
+				case 83://down
+				
+				break;
+				case 68://right
+				
+				break;
+				
+			};
+			//$("body").append(e.which);
+		});
+		
+	};
+	
+	this.update = function(){
+		//player 1 
+		snake.update(snake.direction);
+	};
+	
+	this.output = function(){
+		snake.output(snake.x,snake.y,snake.direction);
+	};
+	
+	this.cleanUp = function(){
+		context.clearRect ( x , y , width , height ); //clears previous frame
+	}
+	
+	this.loopInterval = setInterval(function(){
+		update();
+		output();
+		cleanUp();
+	}, 1000 / this.fps);
+	
+
+	this.input();
+	var update = this.update;
+	var output = this.output;
+	var cleanUp = this.cleanUp;
+	
+}
+
+/*
+var isColliding = function(a, b){
+	try{
+	}catch(error){
+	}
+	return true;
+}
+*/
+
+
+snake = new Snake();
+snake.snakeBodySegments[snake.snakeBodySegments.length] = new SnakeBodySegment(0,0);
+snakeGame = new Game(0, 0, 440,440);
+
+</script>
+</html>

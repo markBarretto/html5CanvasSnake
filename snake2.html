@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+</head>
+
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+
+<style>
+#gameContainer{
+	background-image: url(images/bkgd.jpg);
+	margin: 0 auto;
+}
+</style>
+
+<body>
+	<canvas id="gameContainer" style="border: 1px solid black"></canvas>
+</body>
+
+<script type="text/javascript">
+var canvas = document.getElementById("gameContainer");
+var context = canvas.getContext("2d");
+
+var SnakeBodySegment = function(x,y){
+	this.x = x;
+	this.y = y;
+	this.width = 20;
+	this.height = 20;
+};
+
+var Apple = function(x, y){	
+	this.x = x;
+	this.y = y;
+	this.width = 20;
+	this.height = 20;
+
+	this.changePosition = function(){
+		appleX = (Math.floor(Math.random()*20)*20)+20;
+		appleY = (Math.floor(Math.random()*20)*20)+20;
+	}
+
+	this.update = function(){
+		
+	}	
+	
+	this.output = function(x,y){
+		var appleImage = new Image();
+		appleImage.src = "images/food.png";
+		appleImage.onload = function() {
+			context.drawImage(appleImage, 20, 0, 20, 20, x, y, 20, 20);
+		}
+	}
+	
+	this.isColliding = function(obj){
+		if(obj.x == appleX && obj.y == appleY){
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	appleX = this.x;
+	appleY = this.y;
+
+}
+
+var Snake = function(id){
+	this.id = id;
+	this.x = 20;
+	this.y = 220;
+	this.width = 20;
+	this.height = 20;
+	this.height = 20;
+	this.direction = "right";
+	this.snakeBodySegments = new Array();
+	
+	if(id!=0){
+		this.x = 400;
+		this.y = 220;
+		this.direction = "left";
+	}
+	
+	this.isColliding = function (obj){
+		if(obj.x == snakes[id].x && obj.y == snakes[id].y){
+			return true;
+		}
+		return false;	
+	}
+	
+	this.isSelfColliding = function(){		
+		/*for(i=1; i<snakes[id].snakeBodySegments.length; i++){
+			if(snakes[id].snakeBodySegments[i].x == snakes[id].x && snakes[id].snakeBodySegments[i].y == snakes[id].y){
+				return true;
+			}
+		}
+		*/
+		for(ii=0; ii<snakes.length; ii++){
+			for(i=0; i<snakes[ii].snakeBodySegments.length; i++){
+				if(snakes[ii].snakeBodySegments[i].x == snakes[id].x && snakes[ii].snakeBodySegments[i].y == snakes[id].y){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	this.isInContainer = function(obj){
+		if(snakes[id].x > obj.x && snakes[id].width+snakes[id].x < obj.width+obj.x && snakes[id].y > obj.y && snakes[id].y+snakes[id].height < obj.height+obj.y){
+			return true;
+		}
+		return false;
+	}
+	
+	this.update = function(direction, id){
+		//Add segment before moving head
+		if(snakes[id].snakeBodySegments.length>0){
+			for(i=snakes[id].snakeBodySegments.length-1; i > 0; i--){
+				snakes[id].snakeBodySegments[i].y = snakes[id].snakeBodySegments[i-1].y;
+				snakes[id].snakeBodySegments[i].x = snakes[id].snakeBodySegments[i-1].x;
+			}
+			snakes[id].snakeBodySegments[0].y = snakes[id].y;
+			snakes[id].snakeBodySegments[0].x = snakes[id].x;
+		} 
+		
+		switch(direction){
+			case "right":
+				this.x+=this.width;
+			break;
+			case "left":
+				this.x-=this.width;
+			break;
+			case "up":
+				this.y-=this.width;
+			break;
+			case "down":
+				this.y+=this.width;
+			break;
+		}
+	}
+	
+	this.output = function(x,y,direction){
+		var headImage = new Image();
+		headImage.src = "images/head1.png";
+		if(id!=0){
+			headImage.src = "images/head2.png";	
+		}
+		headImage.onload = function() {
+			switch(direction){
+				case "right":
+				context.drawImage(headImage, 20, 0, 20, 20, x, y, 20, 20);
+				break;
+				case "left":
+				context.drawImage(headImage, 0, 0, 20, 20, x, y, 20, 20);
+				break;
+				case "up":
+				context.drawImage(headImage, 0, 20, 20, 20, x, y, 20, 20);
+				break;
+				case "down":
+				context.drawImage(headImage, 20, 20, 20, 20, x, y, 20, 20);
+				break;
+			}
+	   		
+	    };
+	    
+	    var bodyImage = new Image();
+		bodyImage.src = "images/body1.png";
+		bodyImage.onload = function() {
+			for(i=0; i<snakes[id].snakeBodySegments.length; i++){
+				if(snakes[id].snakeBodySegments.length == 1){
+					switch(direction){
+					case "right":
+						context.drawImage(bodyImage, 0, 20, 20, 20, x-20, y, 20, 20);
+					break;
+					case "left":
+						context.drawImage(bodyImage, 20, 20, 20, 20, x+20, y, 20, 20);
+					break;
+					case "up":
+						context.drawImage(bodyImage, 40, 0, 20, 20, x, y+20, 20, 20);
+					break;
+					case "down":
+						context.drawImage(bodyImage, 40, 20, 20, 20, x, y-20, 20, 20);
+					break;
+					}
+				}
+				if(i==snakes[id].snakeBodySegments.length-1){ //last body segment is tail
+					if(snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-1].x == snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-2].x){
+						if(snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-1].y < snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-2].y){
+							context.drawImage(bodyImage, 40, 20, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+						} else if(snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-1].y > snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-2].y){
+							context.drawImage(bodyImage, 40, 0, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+						} 
+					} else if(snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-1].y == snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-2].y){
+						if(snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-1].x < snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-2].x){
+							context.drawImage(bodyImage, 0, 20, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+						} else if(snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-1].x > snakes[id].snakeBodySegments[snakes[id].snakeBodySegments.length-2].x){
+							context.drawImage(bodyImage, 20, 20, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+						}	
+					}
+				} else {
+					if(snakes[id].snakeBodySegments[i].x == snakes[id].snakeBodySegments[i+1].x){
+						if(snakes[id].snakeBodySegments.length > 2 && i>0 && snakes[id].snakeBodySegments[i-1].x != snakes[id].snakeBodySegments[i].x){
+							if(snakes[id].snakeBodySegments[i-1].x > snakes[id].snakeBodySegments[i].x){
+								context.drawImage(bodyImage, 60, 20, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);	
+							} else if (snakes[id].snakeBodySegments[i-1].x < snakes[id].snakeBodySegments[i].x){
+								context.drawImage(bodyImage, 80, 20, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+							} 
+						} else {
+							context.drawImage(bodyImage, 20, 0, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+						}
+					} else if(snakes[id].snakeBodySegments[i].y == snakes[id].snakeBodySegments[i+1].y) {
+						if(snakes[id].snakeBodySegments.length > 2 && i>0 && snakes[id].snakeBodySegments[i-1].y != snakes[id].snakeBodySegments[i].y){
+							if(snakes[id].snakeBodySegments[i-1].y > snakes[id].snakeBodySegments[i].y){
+								context.drawImage(bodyImage, 60, 0, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);	
+							} else if (snakes[id].snakeBodySegments[i-1].y < snakes[id].snakeBodySegments[i].y){
+								context.drawImage(bodyImage, 60, 20, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);
+							} 
+						} else {
+							context.drawImage(bodyImage, 0, 0, 20, 20, snakes[id].snakeBodySegments[i].x, snakes[id].snakeBodySegments[i].y, 20, 20);						
+						}
+					} 
+				}
+			}
+	    };
+	}
+
+}
+
+var GameObject = function(x, y, width, height){
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	
+	this.isColliding = function(a, b){
+		if(typeof(a) == object && typeof(b) == object){
+			return true;
+		}
+		return false;
+	}
+}
+
+
+var Game = function(x, y, width, height){
+
+	$("#gameContainer").attr("width", width).attr("height", height);
+	var directions = new Array();
+	this.fps = 12;
+	this.x = x;
+	this.y = y;
+	this.height = height;
+	this.width = width;
+	this.gameObjects = new Array();
+	
+	this.input = function(){
+		var e = jQuery.Event("keydown");
+		$(document).keydown(function (e) {
+    		switch(e.which){
+    			//1st player controls
+				case 37://left
+					if(snakes[0].direction!="right"){
+						snakes[0].direction = "left"
+					}
+				break;
+				case 38://up
+					if(snakes[0].direction!="down"){
+						snakes[0].direction = "up"
+					}
+				break;
+				case 39://right
+					if(snakes[0].direction!="left"){
+						snakes[0].direction = "right"
+					}
+				break;
+				case 40://down
+					if(snakes[0].direction!="up"){
+						snakes[0].direction = "down"
+					}
+				break;
+				
+				//2nd player controls
+				case 65://left
+					if(snakes[1].direction!="right"){
+						snakes[1].direction = "left"
+					}
+				break;
+				case 87://up 
+					if(snakes[1].direction!="down"){
+						snakes[1].direction = "up"
+					}
+				break;
+				case 83://down
+					if(snakes[1].direction!="up"){
+						snakes[1].direction = "down"
+					}				
+				break;
+				case 68://right
+					if(snakes[1].direction!="left"){
+						snakes[1].direction = "right"
+					}
+				break;
+				
+			};
+		});
+	};
+	
+	this.update = function(){
+		//player 1 
+		for(i=0; i<snakes.length; i++){
+			if(apple.isColliding(snakes[i])){
+				snakes[i].snakeBodySegments[snakes[i].snakeBodySegments.length] = new SnakeBodySegment(snakes[i].snakeBodySegments[snakes[i].snakeBodySegments.length-1].x,snakes[i].snakeBodySegments[snakes[i].snakeBodySegments.length-1].y);
+				apple.changePosition();
+				apple.x = appleX;
+				apple.y = appleY;
+			}
+			/*
+			if(snakes[i].isSelfColliding()||!snakes[i].isInContainer(snakeGame)){
+				clearInterval(snakeGame.loopInterval);
+			} else {
+				//snakes[i].update(snakes[i].direction, i);
+			}
+			*/
+		}
+		
+		if(snakes[1].isSelfColliding()||!snakes[1].isInContainer(snakeGame)||snakes[0].isSelfColliding()||!snakes[0].isInContainer(snakeGame)){
+			clearInterval(snakeGame.loopInterval);
+		} else {
+			snakes[0].update(snakes[0].direction, 0);
+			snakes[1].update(snakes[1].direction, 1);
+
+		}
+	};
+	
+	this.output = function(){
+		for(i=0; i<snakes.length; i++){
+			snakes[i].output(snakes[i].x,snakes[i].y,snakes[i].direction);
+		}
+		apple.output(appleX,appleY);
+	};
+	
+	this.cleanUp = function(){
+		context.clearRect ( x , y , width , height ); //clears previous frame
+	}
+	
+	this.loopInterval = setInterval(function(){
+		update();
+		output();
+		cleanUp();
+	}, 1000 / this.fps);
+
+	this.input();
+	var update = this.update;
+	var output = this.output;
+	var cleanUp = this.cleanUp;
+	
+}
+
+snakes = new Array();
+snakes[0] = new Snake(0); 
+snakes[0].snakeBodySegments[snakes[0].snakeBodySegments.length] = new SnakeBodySegment(0,0);
+
+snakes[1] = new Snake(1); 
+snakes[1].snakeBodySegments[snakes[1].snakeBodySegments.length] = new SnakeBodySegment(0,0);
+
+apple = new Apple(220,220);
+snakeGame = new Game(0, 0, 440,440);
+
+
+</script>
+</html>
